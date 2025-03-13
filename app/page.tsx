@@ -90,7 +90,7 @@ export default function Home() {
             icon={<User className="h-10 w-10 text-[#4A90E2]" />}
             title="Staff Management"
             description="Manage staff profiles, credentials, shifts, and department assignments."
-            href="/staff"
+            href="/admin/staff"
           />
           <FeatureCard
             icon={<FileText className="h-10 w-10 text-[#4A90E2]" />}
