@@ -177,7 +177,7 @@ export default function AppointmentsPage() {
             <h1 className="text-2xl font-light text-[#333333]">MediCare</h1>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/dashboard" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
+            <Link href="/" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
               Dashboard
             </Link>
             <Link href="/patients" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
@@ -222,7 +222,7 @@ export default function AppointmentsPage() {
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
             </button>
-            <h2 className="text-lg font-medium">November 2023</h2>
+            <h2 className="text-lg font-medium">March 2025</h2>
             <button className="px-3 py-2 text-sm border border-gray-200 rounded-md flex items-center bg-white hover:bg-gray-50">
               Next
               <ChevronRight className="h-4 w-4 ml-1" />

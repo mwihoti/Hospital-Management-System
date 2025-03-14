@@ -221,15 +221,17 @@ return (
                 </div>
 
                 <nav className="hidden md:flex items-center space-x-6">
-                    <Link href="/dashboard" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
+                    <Link href="/" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
                     Dashboard</Link>
                     <Link href="/patients" className="text-[#333333] hover:text-[#4A90E2] transition-colors">Patients</Link>
-                    <Link href="/patients" className="text-[#333333] hover:text-[#4A90E2] transition-colors">Appointments</Link>
-                    <Link href="/patients" className="text-[#333333] hover:text-[#4A90E2] transition-colors">Billing</Link>  
+                    <Link href="/appointments" className="text-[#333333] hover:text-[#4A90E2] transition-colors">Appointments</Link>
+                    <Link href="/billing" className="text-[#333333] hover:text-[#4A90E2] transition-colors">Billing</Link>  
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#4A90E2] flex items-center jsutify-center text-white">JD</div>
-                        <span className="text-[#333333]">John Doe</span>
-                    </div>
+              <div className="w-8 h-8 rounded-full bg-[#4A90E2] flex items-center justify-center text-white">
+                AD
+              </div>
+              <span className="text-[#333333]">Dr. Adams</span>
+            </div>
   
                 </nav>
                 <button className="md:hidden p-2 rounded-md hover:bg-gray-100">

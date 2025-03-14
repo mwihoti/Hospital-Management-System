@@ -166,7 +166,7 @@ return (
             <h1 className="text-2xl font-light text-[#333333]">MediCare</h1>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/dashboard" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
+            <Link href="/" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
               Dashboard
             </Link>
             <Link href="/patients" className="text-[#4A90E2] font-medium transition-colors">
