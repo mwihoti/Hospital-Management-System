@@ -57,7 +57,7 @@ export default function Login() {
             console.log("Login Successful")
 
            // Fetch user data to determine role
-            const response = await fetch("/api/user");
+            const response = await fetch("/api/users");
             const userData = await response.json();
 
             if (!response.ok) {
