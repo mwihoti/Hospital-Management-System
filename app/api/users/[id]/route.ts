@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import connectToDatabase from "@/lib/mongodb"
 import User from "@/models/User"
 import { verifyToken } from "@/lib/auth"
-import { unauthorized } from "next/navigation"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
 
@@ -29,7 +28,7 @@ try {
 
     const user = await User.findById(userId)
     if (!user) {
-        return NextResponse.json({ error: "user mot found"}, {status: 404})
+        return NextResponse.json({ error: "user not found"}, {status: 404})
     }
     return NextResponse.json({ user})
 } catch (error: any) {

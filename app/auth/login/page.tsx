@@ -60,15 +60,6 @@ export default function Login() {
             const response = await fetch("/api/users");
             const userData = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || "Login failed")
-            }
-            // Store token in localStorage or cookies
-            localStorage.setItem("token", data.token)
-
-            // Store user info
-            localStorage.setItem("user", JSON.stringify(data.user))
-
             // Redirect based on role
             switch (userData.role) {
                 case "admin":
