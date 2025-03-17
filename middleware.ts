@@ -4,7 +4,7 @@ import { verifyToken } from "./lib/auth"
 
 
 const protectedPaths = [
-    "/admin",
+    //"/admin",
     "/doctor",
     "/patient",
     "/api/users",
@@ -16,7 +16,7 @@ const protectedPaths = [
 
 // Path that require specific roles
 const roleBasedPaths: Record<string, string[]> = {
-    "/admin": ["admin"],
+    //"/admin": ["admin"],
     "/doctor": ["doctor"],
     "/patient": ["patient"]
 }
