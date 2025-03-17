@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Activity } from "lucide-react"
+import { signIn } from "next-auth/react"
 
 export default function Login() {
    
@@ -41,15 +42,24 @@ export default function Login() {
         try {
             setLoading(true)
 
-            const response = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            })
+            console.log("Login attempt with NextAuth:", {email: formData.email});
 
-            const data = await response.json()
+            const result = await signIn("credentials", {
+                email: formData.email,
+                password: formData.password,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                throw new Error(result.error || "Login failed")
+            }
+
+            console.log("Login Successful")
+
+           // Fetch user data to determine role
+            const response = await fetch("/api/user");
+            const userData = await response.json();
+
             if (!response.ok) {
                 throw new Error(data.error || "Login failed")
             }
@@ -60,14 +70,19 @@ export default function Login() {
             localStorage.setItem("user", JSON.stringify(data.user))
 
             // Redirect based on role
-            switch (data.user.role) {
+            switch (userData.role) {
                 case "admin":
+                    console.log("Redirecting to admin dashboard");
                     router.push('/admin/dashboard')
                     break
                 case "doctor":
+                    console.log("Redirecting to doctor dashboard");
+
                     router.push('/admin/doctor')
                     break
                 case "patient":
+                    console.log("Redirecting to patient dashboard");
+
                     router.push('/patient')
                     break
                 default:
@@ -75,8 +90,8 @@ export default function Login() {
             }
 
 
-        console.log("Login successful")
         } catch (err: any) {
+            console.error("Login error", err)
             setError(err.message)
         } finally {
             setLoading(false)

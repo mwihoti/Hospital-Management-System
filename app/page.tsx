@@ -26,7 +26,9 @@ export default function Home() {
               Staff
             </Link>
             <button className="bg-[#4A90E2] hover:bg-[#3A80D2] text-white px-4 py-2 rounded-md transition-colors">
+            <Link href="/auth/login" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
               Login
+            </Link>
             </button>
           </nav>
           <button className="md:hidden p-2">

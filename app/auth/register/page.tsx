@@ -16,7 +16,7 @@ export default function Register() {
         email: "",
         password: "",
         confirmPassword: "",
-        role: "patienr",
+        role: "patient",
         // Doctor specific fields
         specialization: "",
         department: "",
