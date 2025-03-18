@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import connectToDatabase from "@/lib/mongodb"
 import Appointment from "@/models/Appointment"
 import { verifyToken } from "@/lib/auth"
-import { error } from "console"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
 
