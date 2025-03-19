@@ -126,6 +126,9 @@ return (
                                         {appointment.time || "N/A"}
                                     </div>
                                 </TableCell>
+                                <TableCell>
+                                    {getStatusBadge(appointment.status)}
+                                </TableCell>
                                 <TableCell className="text-right">
                                     {appointment.status !== "completed" && appointment.status !== "cancelled" && (
                                         <Button
@@ -134,7 +137,7 @@ return (
                                             onClick={() => cancelAppointment(appointment._id)}
                                             title="Cancel Appointment">
                                                 <XCircle className="h-4 w-4 text-red-500" />
-                                            </Button>
+                                        </Button>
                                     )}
                                 </TableCell>
                             </TableRow>
