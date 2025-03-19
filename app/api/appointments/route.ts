@@ -1,91 +1,74 @@
 import { NextResponse } from "next/server"
 import connectToDatabase from "@/lib/mongodb"
 import Appointment from "@/models/Appointment"
-import User from "@/models/User"
-import { verifyToken } from "@/lib/auth"
-import { error } from "console"
+import { getAppointments, getUserAppointments } from "@/lib/db-utils"
+
 
 export async function GET(request: Request) {
     try {
-        // Verify authentication
-        const token = request.headers.get("Authorization")?.split(" ")[1]
-        if (!token) {
-            return NextResponse.json({ error: "Authentication required"}, {status: 401})
-        }
+        const { searchParams } = new URL(request.url)
+        const userId = searchParams.get("userId")
+        const role = searchParams.get("role")
 
-        const decoded = verifyToken(token)
-        if (!decoded) {
-            return NextResponse.json({ error: "Invalid token" }, {status: 401})
-        }
+        let appointments
 
+        if (userId && role) {
+            appointments = await getUserAppointments(userId, role)
+        } else {
+            appointments = await getAppointments()
+        }
+        return NextResponse.json(appointments)
+        
+} catch (error: any) {
+    console.error("Error fetching appointments:", error)
+    return NextResponse.json({ error: error.message || "Failed to fetch appointments"}, {status: 500})
+}
+}
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url)
+        const userId = searchParams.get("userId")
+        const role = searchParams.get("role")
+
+        let appointments
+
+        if (userId && role) {
+            appointments = await getUserAppointments(userId, role)
+        } else {
+            appointments = await getAppointments()
+        }
+        return NextResponse.json(appointments)
+    } catch (error: any) {
+        console.error("Error fetching appointments:", error)
+        return NextResponse.json({ error: error.message || "Failed to fetch appointments"}, { status: 500})
+    }
+}
+
+export async function POST(request: Request) {
+    try {
         await connectToDatabase()
 
-        // Get query parameters
-        const url = new URL(request.url)
-        const status = url.searchParams.get("status")
-        const date = url.searchParams.get("date")
-        const doctorId = url.searchParams.get("doctor")
-        const patientId = url.searchParams.get("patient")
-        const limit = Number.parseInt(url.searchParams.get("limit") || "10")
-        const page = Number.parseInt(url.searchParams.get("page") || "1")
+        const body = await request.json()
+        const { patientId, doctorId, date, time, status, reason } = body
 
-        // Build query
-        const query: any = {}
-
-        // Filter by status if provided
-        if (status) {
-            query.status = status
+        // validate required fields
+        if (!patientId || !doctorId || !date || !time) {
+            return NextResponse.json({ error: "Missing required fields"}, { status: 400})
         }
 
-        // Filter by date if provided
-        if (date) {
-            const startDate = new Date(date)
-            startDate.setHours(0, 0, 0, 0)
-
-
-            const endDate = new Date(date)
-            endDate.setHours(23, 59, 59, 999)
-
-            query.date = { $gte: startDate, $lte: endDate}
-        }
-        // Role-based access control
-        if (decoded.role === "doctor") {
-            // Doctors can only see their own  appointments
-            query.doctor = decoded.userId
-        } else if (decoded.role === "patient") {
-            // Patients can only see their own appointments
-            query.patient = decoded.userId
-        } else if (decoded.role === "admin") {
-            // Admins can filter by doctor or  patient
-            if (doctorId) {
-                query.doctor = doctorId
-            }
-
-            if (patientId) {
-                query.patient = patientId
-            }
-        }
-        // Calculate pagination
-        const skip = (page - 1) * limit
-
-        // Get appointments
-        const appointments = await Appointment.find(query)
-            .populate("patient", "name email")
-            .populate("doctor", "name email specialization department")
-            .skip(skip)
-            .limit(limit)
-            .sort({ date: 1, time: 1})
-        // Get total count
-        const totalAppointments = await Appointment.countDocuments(query)
-
-        return NextResponse.json({
-            appointments,
-            pagination: {
-                total: totalAppointments,
-                page,
-                limit,
-                pages: Math.
-            }
+        // Create new appointment
+        const appointment = await Appointment.create({
+            patientId,
+            doctorId,
+            date,
+            time,
+            status: status || "scheduled",
+            reason
         })
+        return NextResponse.json(appointment, {status: 201})
+    } catch (error: any) {
+        console.error("Error creating appointment:", error)
+        return NextResponse.json({error: error.message || "Failed to create appointment"}, {status: 500})
     }
 }
