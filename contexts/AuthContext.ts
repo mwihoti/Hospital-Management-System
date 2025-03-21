@@ -1,5 +1,5 @@
 "use client"
-
+import type React from "react"
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 
@@ -7,42 +7,51 @@ interface User {
   _id: string
   name: string
   email: string
-  role: "admin" | "doctor" | "patient"
-  [key: string]: any
+  role: string
 }
+ 
 
 interface AuthContextType {
   user: User | null
-  token: string | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
-  isAuthenticated: boolean
+  register: (name: string, email: string, password: string, role: string)=> Promise<void>
+  logout: () => Promise<void>
+  error: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children}) => {
   const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is logged in
-    const storedToken = localStorage.getItem("token")
-    const storedUser = localStorage.getItem("user")
+    // Check if user is logged in on initial load
+    const checkUserLoggedIn = async () => {
+      try {
+        const response = await fetch("/api/auth/me")
 
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        }
+      } catch (error) {
+        console.error("Failed to fetch user:", error)
+      } finally {
+        setLoading(false)
+      }
     }
-
-    setLoading(false)
+    checkUserLoggedIn()
   }, [])
+
+  // Login function
 
   const login = async (email: string, password: string) => {
     setLoading(true)
+    setError(null)
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -58,60 +67,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         throw new Error(data.error || "Login failed")
       }
-
-      // Store token and user info
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
-
-      setToken(data.token)
       setUser(data.user)
 
-      // Redirect based on role
-      switch (data.user.role) {
-        case "admin":
-          router.push("/admin/dashboard")
-          break
-        case "doctor":
-          router.push("/staff/dashboard")
-          break
-        case "patient":
-          router.push("/patient/dashboard")
-          break
-        default:
-          router.push("/dashboard")
+      // Redirect based on user role
+      if (data.user.role === "admin") {
+        router.push("/admin/dashboard")
+      } else if (data.user.role === "doctor") {
+        router.push("/staff/dashboard")
+      } else if (data.user.role === "patient") {
+        router.push("/patient/dashboard")
+      } else {
+        router.push("/")
+      }
+      
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError("An unknown error occured")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+ // Register function
+  const register = async (name: string, email: string, password: string, role: string) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name, email, password, role})
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Registration failed")
+      }
+      setUser(data.user)
+
+      // Redirect based on user role
+      if (data.user.role === "admin") {
+        router.push("/admin/dashboard")
+      } else if (data.user.role === "doctor") {
+        router.push("/staff/dashboard")
+      } else if (data.user.role === "patient") {
+        router.push("/patient/dashboard")
+      } else {
+        router.push("/")
       }
     } catch (error) {
-      throw error
+      if (error instanceof Error) {
+        setError(error.message)
+
+      } else {
+        setError("An unknown error occured")
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const logout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
-    setToken(null)
-    setUser(null)
-    router.push("/auth/login")
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST"
+      })
+      setUser(null)
+      router.push("/login")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        login,
-        logout,
-        isAuthenticated: !!token,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, error }}>{children}</AuthContext.Provider>
   )
 }
 
-export function useAuth() {
+
+export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")
