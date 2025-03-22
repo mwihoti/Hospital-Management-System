@@ -16,147 +16,141 @@ export default function PatientsPage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [isInsuranceOpen, setIsInsuranceOpen] = useState(false);
 
-useEffect(() => {
+  // Fetch patients data
+  useEffect(() => {
     const fetchPatients = async () => {
-        setLoading(true);
-        try {
-            const data =  await getPatients();
-            setPatients(data);
-            setFilteredPatients(data);
-        } catch (error) {
-            console.error("Error fetching patients:", error)
-        } finally {
-            setLoading(false);
-        }
+      setLoading(true);
+      try {
+        const data = await getPatients();
+        setPatients(data);
+        setFilteredPatients(data);
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchPatients();
-}, []);
+  }, []);
 
-// Fetch patients stats
-useEffect(() => {
+  // Fetch patient stats
+  useEffect(() => {
     const fetchStats = async () => {
-        setStatsLoading(true);
-        try {
-            const data = await getPatientStats();
-            setPatientStats(data);
-
-        } catch (error) {
-            console.error("Error fetching patients stats:", error);
-        } finally {
-            setStatsLoading(false);
-        }
+      setStatsLoading(true);
+      try {
+        const data = await getPatientStats();
+        setPatientStats(data);
+      } catch (error) {
+        console.error("Error fetching patient stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
     };
+
     fetchStats();
-}, []);
+  }, []);
 
-
-
-// Handle tab changes
-useEffect(() => {
+  // Handle tab changes
+  useEffect(() => {
     const fetchFilteredPatients = async () => {
-        setLoading(true);
-        try {
-            let data;
-            if (activeTab === "active") {
-                data = await getPatients("active");
-
-            } else if (activeTab === "inactive") {
-                data = await getPatients("inactive")
-            } else {
-                data = await getPatients();
-            }
-            setPatients(data);
-            applyFilters(data);
-    } catch (error) {
+      setLoading(true);
+      try {
+        let data;
+        if (activeTab === "active") {
+          data = await getPatients("active");
+        } else if (activeTab === "inactive") {
+          data = await getPatients("inactive");
+        } else {
+          data = await getPatients();
+        }
+        setPatients(data);
+        applyFilters(data);
+      } catch (error) {
         console.error("Error fetching filtered patients:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchFilteredPatients();
-}, [activeTab]);
+    fetchFilteredPatients();
+  }, [activeTab]);
 
-// Apply search aand insurance fillteres
-
-const applyFilters = (data: Patient[]) => {
+  // Apply search and insurance filters
+  const applyFilters = (data: Patient[]) => {
     let filtered = [...data];
-
+    
     // Apply search filter
     if (searchQuery) {
-        const query = searchQuery.toLocaleLowerCase();
-        filtered = filtered.filter(
-            patient => 
-                patient.name.toLowerCase().includes(query) ||
-            patient.id.toLowerCase().includes(query) ||
-            patient.email.toLowerCase().includes(query)
-        );
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        patient => 
+          patient.name.toLowerCase().includes(query) ||
+          patient.id.toLowerCase().includes(query) ||
+          patient.email.toLowerCase().includes(query)
+      );
     }
+    
     // Apply insurance filter
     if (insuranceFilter !== "all") {
-        filtered = filtered.filter(
-            patient => patient.insurance.toLowerCase() === insuranceFilter.toLowerCase()
-        );
+      filtered = filtered.filter(
+        patient => patient.insurance.toLowerCase() === insuranceFilter.toLowerCase()
+      );
     }
+    
     setFilteredPatients(filtered);
-};
+  };
 
-// Handle search input chnage
-const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
     applyFilters(patients);
+  };
 
-};
-
-// Handle insurance filter change
-
-const handleInsuranceChange = (value: string) => {
+  // Handle insurance filter change
+  const handleInsuranceChange = (value: string) => {
     setInsuranceFilter(value);
     setIsInsuranceOpen(false);
-    applyFilters(patients)
-};
+    applyFilters(patients);
+  };
 
-// Render stat cards with loading state
-const renderStatCards = () => {
+  // Render stat cards with loading state
+  const renderStatCards = () => {
     if (statsLoading) {
-        return Array(4).fill(0).map((_, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse"></div>
-            <div className="space-y-2">
-              <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
-              <div className="h-6 w-16 bg-gray-200 animate-pulse rounded"></div>
-            </div>
+      return Array(4).fill(0).map((_, index) => (
+        <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse"></div>
+          <div className="space-y-2">
+            <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-6 w-16 bg-gray-200 animate-pulse rounded"></div>
           </div>
-        ));
+        </div>
+      ));
     }
 
-
-return patientStats.map((stat, index) => {
-    // Map icon string to component
-
-    const IconComponent = 
-        stat.icon === "User" ? User :
-        stat.icon === "Plus" ? Plus :
+    return patientStats.map((stat, index) => {
+      // Map icon string to component
+      const IconComponent = 
+        stat.icon === "User" ? User : 
+        stat.icon === "Plus" ? Plus : 
         stat.icon === "Calendar" ? Calendar : Clock;
 
-
-        return (
-            <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4">
-            <div className={`p-3 rounded-full ${stat.color}`}>
-              <IconComponent className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm text-[#666666]">{stat.title}</p>
-              <p className="text-2xl font-medium text-[#333333]">{stat.value}</p>
-            </div>
+      return (
+        <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4">
+          <div className={`p-3 rounded-full ${stat.color}`}>
+            <IconComponent className="h-5 w-5" />
           </div>
-        )
-})
-}
+          <div>
+            <p className="text-sm text-[#666666]">{stat.title}</p>
+            <p className="text-2xl font-medium text-[#333333]">{stat.value}</p>
+          </div>
+        </div>
+      );
+    });
+  };
 
-
-return (
+  return (
     <div className="min-h-screen bg-[#F8F9FA]">
       {/* Header */}
       <header className="bg-white shadow-sm">
@@ -166,7 +160,7 @@ return (
             <h1 className="text-2xl font-light text-[#333333]">MediCare</h1>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
+            <Link href="/dashboard" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
               Dashboard
             </Link>
             <Link href="/patients" className="text-[#4A90E2] font-medium transition-colors">

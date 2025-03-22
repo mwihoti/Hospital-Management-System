@@ -1,192 +1,176 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
+import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Activity } from "lucide-react"
-import { signIn } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-export default function Login() {
-   
-    const router = useRouter()
-    const searchParams = useSearchParams()
-    const [formData, setFormData] = useState({
-        email : "",
-        password : "",
-    })
+export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState("")
-    const [successMessage, setSuccessMessage] = useState("")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const registered = searchParams.get("registered")
 
-
-    useEffect(() => {
-        const registered = searchParams.get("registered")
-        if (registered) {
-            setSuccessMessage("Registration successful! please log in.")
-        }
-    }, [searchParams])
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({...prev, [name]: value}))
+  useEffect(() => {
+    if (registered === "true") {
+      setSuccess("Registration successful! You can now log in.")
     }
+  }, [registered])
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setError("")
-        setSuccessMessage("")
-        // Todo add api call to authenticate
-        try {
-            setLoading(true)
+    console.log("Login attempt with:", { email, password })
 
-            console.log("Login attempt with NextAuth:", {email: formData.email});
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      })
 
-            const result = await signIn("credentials", {
-                email: formData.email,
-                password: formData.password,
-                redirect: false,
-            });
+      if (result?.error) {
+        throw new Error(result.error === "CredentialsSignin" ? "Invalid email or password" : result.error)
+      }
 
-            if (result?.error) {
-                throw new Error(result.error || "Login failed")
-            }
+      if (result?.ok) {
+        // Fetch user data to determine role
+        const userResponse = await fetch("/api/auth/me")
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          const role = userData.user.role
 
-            console.log("Login Successful")
-
-           // Fetch user data to determine role
-            const response = await fetch("/api/users");
-            const userData = await response.json();
-
-            // Redirect based on role
-            switch (userData.role) {
-                case "admin":
-                    console.log("Redirecting to admin dashboard");
-                    router.push('/admin/dashboard')
-                    break
-                case "doctor":
-                    console.log("Redirecting to doctor dashboard");
-
-                    router.push('/admin/doctor')
-                    break
-                case "patient":
-                    console.log("Redirecting to patient dashboard");
-
-                    router.push('/patient')
-                    break
-                default:
-                    router.push('/')
-            }
-
-
-        } catch (err: any) {
-            console.error("Login error", err)
-            setError(err.message)
-        } finally {
-            setLoading(false)
+          // Redirect based on role
+          if (role === "admin") {
+            router.push("/admin/dashboard")
+          } else if (role === "doctor") {
+            router.push("/staff/dashboard")
+          } else if (role === "patient") {
+            router.push("/patient/dashboard")
+          } else {
+            router.push("/")
+          }
+        } else {
+          router.push("/")
         }
-
-        // Redirect to dashboard after successfull login
-        router.push("/")
+      }
+    } catch (error) {
+      console.log("Login error", error)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError("An error occurred during login")
+      }
+    } finally {
+      setLoading(false)
     }
+  }
 
+  const handleCreateTestUser = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/seed")
+      const data = await response.json()
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-6">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-          Or{" "}
-          <Link href="/auth/register" className="font-medium text-[#4A90E2] hover:text-[#3A80D2]">
-            create a new account
-          </Link>
-        </p>
-                </div>
-                <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+      if (response.ok) {
+        setEmail(data.email)
+        setPassword(data.password)
+        setSuccess("Test user created. You can now log in with the provided credentials.")
+        setError(null)
+      } else {
+        setError(data.error || "Failed to create test user")
+      }
+    } catch (error) {
+      setError("Failed to create test user")
+    } finally {
+      setLoading(false)
+    }
+  }
 
-          {successMessage && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-              {successMessage}
-            </div>
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Login</CardTitle>
+          <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {success && (
+            <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
           )}
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <input type="hidden" name="remember" value="true" />
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <label htmlFor="email-address" className="sr-only">
-                                Email address
-                            </label>
-                            <input
-                                id="email-address"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                  className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none 
-                                  focus:ring-[#4A90E2] focus:border-[#4A90E2]"
-                                placeholder="Email address"
-                                value={formData.email}
-                                onChange={handleChange}/>
 
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="sr-only">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md 
-                                shadow-sm focus:outline-none focus:ring-[#4A90E2] focus:border-[#4A90E2]"                                placeholder="Password"
-                                value={formData.password}
-                                onChange={handleChange}
-                              />
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    id="remember-me"
-                                    name="remember-me"
-                                    type="checkbox"
-                                    className="h-4 w-4 text-[#4A90E2] focus:ring-[#4A90E2] border-gray-300 rounded" />
-                                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                                        Remember me
-                                    </label>
-                            </div>
-                            <div className="text-sm">
-                                <a href="#" className="font-medium text-[#4A90E2] hover:text=[#380D2]">
-                                    Forgot your password?
-                                </a>
-                            </div>
-                        </div>
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full flex justify-center py-2 px-4 boder border-transparent rounded-md shadow-sm
-                                text-sm font-medium text-white bg-[#4A90E2] hover:bg-[#3A80D2] focus:outline-none focus:ring-2 focus:ring-offset-2
-                                focus:ring-[#4A90E2] disabled:opacity-50"
-                                >
-                                    {loading ? "Signing in..." : "Sign in"}
-                                </button>
-                        </div>
-                    </div> 
-
-
-                </form>
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleCreateTestUser}
+              disabled={loading}
+            >
+              Create Test User
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <div className="text-sm text-gray-500">
+            Don't have an account?{" "}
+            <Link href="/auth/register" className="text-blue-600 hover:underline">
+              Register
+            </Link>
           </div>
-        </div>
-    )
+        </CardFooter>
+      </Card>
+    </div>
+  )
 }
+

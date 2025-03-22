@@ -46,7 +46,7 @@ const BillItemSchema: Schema = new Schema({
 const BillSchema: Schema = new Schema(
     {
         patient: {
-            type: moongose.Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: [true, "Patient is required"],
         },

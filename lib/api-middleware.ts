@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { verifyJwtToken } from "./auth"
 
 // Define the handler type
 type ApiHandler = (req: NextRequest, context: { params: Record<string, string>}) => Promise<NextResponse>
