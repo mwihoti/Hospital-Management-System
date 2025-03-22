@@ -22,7 +22,7 @@ export const authOptions = {
           await connectToDatabase()
 
           // Find user by email
-          const user = await User.findOne({ email: credentials.email })
+          const user = await User.findOne({ email: credentials.email }).select("+password")
 
           if (!user) {
             console.error(`User not found for email: ${credentials.email}`)
@@ -66,7 +66,7 @@ export const authOptions = {
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
       }
@@ -79,6 +79,7 @@ export const authOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",

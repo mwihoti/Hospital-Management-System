@@ -2,35 +2,44 @@
 
 import type React from "react"
 
-import { useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/AuthContext"
+import { useEffect } from "react"
 
 interface ProtectedRouteProps {
-    children: React.ReactNode
-    allowedRoles?: string[]
+  children: React.ReactNode
+  allowedRoles?: string[]
 }
 
-export default function protectedRoute({ children, allowedRoles}: ProtectedRouteProps) {
-    const { user, loading } = useAuth()
-    const router = useRouter()
+export default function ProtectedRoute({ children, allowedRoles = [] }: ProtectedRouteProps) {
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
-    useEffect(() => {
-        if (!loading && !user) {
-            router.push("/login")
-        } else if (!loading && user && allowedRoles && !allowedRoles.includes(user.role)) {
-            router.push("/")
-        }
-    }, [user, loading, router, allowedRoles])
+  useEffect(() => {
+    if (status === "loading") return
 
-    if (loading) {
-        return <div>Loading</div>
+    if (!session) {
+      router.push("/auth/login")
+      return
     }
-    if (!user) {
-        return null
+
+    if (allowedRoles.length > 0 && !allowedRoles.includes(session.user.role)) {
+      router.push("/")
     }
-    if (allowedRoles && !allowedRoles.includes(user.role)) {
-        return null
-    }
-    return <>{children}</>
+  }, [session, status, router, allowedRoles])
+
+  if (status === "loading") {
+    return <div>Loading...</div>
+  }
+
+  if (!session) {
+    return null
+  }
+
+  if (allowedRoles.length > 0 && !allowedRoles.includes(session.user.role)) {
+    return null
+  }
+
+  return <>{children}</>
 }
+

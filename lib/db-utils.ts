@@ -54,7 +54,7 @@ export async function getUsers(role?: string) {
     await connectToDatabase()
 
     const query = role ? { role } : {}
-    return userAgent.find(query).select("-password")
+    return User.find(query).select("-password")
 }
 
 export async function getUserById(id: string) {

@@ -3,10 +3,10 @@ import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
 // Paths that require authentication
-const protectedPaths = ["/admin", "/staff", "/patients"]
+const protectedPaths = ["/admin", "/staff", "/patient"]
 
 // Paths that are accessible without authentication
-const publicPaths = ["/", "/login", "/register", "/api/auth"]
+const publicPaths = ["/", "/auth/login", "/auth/register", "/api/auth"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
     // If no token, redirect to login
     if (!token) {
-      const url = new URL("/login", request.url)
+      const url = new URL("/auth/login", request.url)
       url.searchParams.set("callbackUrl", encodeURI(request.url))
       return NextResponse.redirect(url)
     }
@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url))
     }
 
-    if (pathname.startsWith("/patients") && token.role !== "patient") {
+    if (pathname.startsWith("/patient") && token.role !== "patient") {
       return NextResponse.redirect(new URL("/", request.url))
     }
   }
@@ -55,7 +55,7 @@ export const config = {
      * 3. /fonts/* (static assets)
      * 4. /favicon.ico, /sitemap.xml (static files)
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
   ],
 }
 

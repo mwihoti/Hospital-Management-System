@@ -3,38 +3,59 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
   const router = useRouter()
   const searchParams = useSearchParams()
-  const registered = searchParams.get("registered")
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const { data: session } = useSession()
 
+  // Redirect if already logged in
   useEffect(() => {
-    if (registered === "true") {
-      setSuccess("Registration successful! You can now log in.")
+    if (session) {
+      const role = session.user.role
+      if (role === "admin") {
+        router.push("/admin/dashboard")
+      } else if (role === "doctor") {
+        router.push("/staff/dashboard")
+      } else if (role === "patient") {
+        router.push("/patient/dashboard")
+      } else {
+        router.push("/")
+      }
     }
-  }, [registered])
+  }, [session, router])
+
+  // Check for error in URL
+  useEffect(() => {
+    const errorParam = searchParams.get("error")
+    if (errorParam) {
+      if (errorParam === "CredentialsSignin") {
+        setError("Invalid email or password")
+      } else {
+        setError(`Authentication error: ${errorParam}`)
+      }
+    }
+
+    // Check if user just registered
+    const registered = searchParams.get("registered")
+    if (registered === "true") {
+      setError("Registration successful! You can now log in.")
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
-
-    console.log("Login attempt with:", { email, password })
 
     try {
       const result = await signIn("credentials", {
@@ -44,32 +65,19 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        throw new Error(result.error === "CredentialsSignin" ? "Invalid email or password" : result.error)
-      }
-
-      if (result?.ok) {
-        // Fetch user data to determine role
-        const userResponse = await fetch("/api/auth/me")
-        if (userResponse.ok) {
-          const userData = await userResponse.json()
-          const role = userData.user.role
-
-          // Redirect based on role
-          if (role === "admin") {
-            router.push("/admin/dashboard")
-          } else if (role === "doctor") {
-            router.push("/staff/dashboard")
-          } else if (role === "patient") {
-            router.push("/patient/dashboard")
-          } else {
-            router.push("/")
-          }
+        if (result.error === "CredentialsSignin") {
+          throw new Error("Invalid email or password")
         } else {
-          router.push("/")
+          throw new Error(result.error)
         }
       }
+
+      if (result?.ok && session) {
+        // NextAuth will handle the session update
+        // The useEffect above will handle the redirect
+      }
     } catch (error) {
-      console.log("Login error", error)
+      console.error("Login error", error)
       if (error instanceof Error) {
         setError(error.message)
       } else {
@@ -84,14 +92,12 @@ export default function LoginPage() {
     try {
       setLoading(true)
       const response = await fetch("/api/seed")
-      const data = await response.json()
-
       if (response.ok) {
-        setEmail(data.email)
-        setPassword(data.password)
-        setSuccess("Test user created. You can now log in with the provided credentials.")
-        setError(null)
+        setEmail("test@example.com")
+        setPassword("password123")
+        setError("Test user created. You can now log in with the provided credentials.")
       } else {
+        const data = await response.json()
         setError(data.error || "Failed to create test user")
       }
     } catch (error) {
@@ -103,73 +109,77 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Login</CardTitle>
-          <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {success && (
-            <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold">Login</h1>
+          <p className="text-gray-600">Enter your credentials to access your account</p>
+        </div>
 
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        {error && (
+          <div
+            className={`p-4 mb-4 rounded-md ${error.includes("successful") || error.includes("Test user created") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
+          >
+            {error}
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
-            </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
-            </Button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleCreateTestUser}
-              disabled={loading}
-            >
-              Create Test User
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <div className="text-sm text-gray-500">
+          <button
+            type="button"
+            onClick={handleCreateTestUser}
+            disabled={loading}
+            className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50"
+          >
+            Create Test User
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <span className="text-sm text-gray-600">
             Don't have an account?{" "}
             <Link href="/auth/register" className="text-blue-600 hover:underline">
               Register
             </Link>
-          </div>
-        </CardFooter>
-      </Card>
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

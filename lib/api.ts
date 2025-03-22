@@ -314,6 +314,74 @@ export const dashboardAPI = {
   },
 }
 
+// Add this type definition
+export type PatientStat = {
+  totalAppointments: number
+  pendingBills: number
+  activePrescriptions: number
+  totalMedicalRecords: number
+}
+
+// Add this function to fetch patient statistics
+export async function getPatientStats(patientId: string): Promise<PatientStat> {
+  try {
+    const response = await fetch(`/api/patients/${patientId}/stats`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch patient statistics")
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("Error fetching patient statistics:", error)
+    // Return default values if the API call fails
+    return {
+      totalAppointments: 0,
+      pendingBills: 0,
+      activePrescriptions: 0,
+      totalMedicalRecords: 0,
+    }
+  }
+}
+
+// Add these direct export functions at the end of the file, after the dashboardAPI object
+
+// Direct export for getPatients function
+export async function getPatients(status?: string): Promise<Patient[]> {
+  try {
+    let endpoint = "/users/role/patient"
+    if (status) {
+      endpoint += `?status=${status}`
+    }
+    const response = await fetchAPI<{ users: User[] }>(endpoint)
+    return response.users as unknown as Patient[]
+  } catch (error) {
+    console.error("Error fetching patients:", error)
+    return []
+  }
+}
+
+// Make sure Patient type is exported
+export type Patient = User & {
+  age?: number
+  gender?: string
+  bloodType?: string
+  allergies?: string[]
+  medicalHistory?: string
+  insurance?: string
+  emergencyContact?: {
+    name: string
+    relationship: string
+    phone: string
+  }
+  lastVisit?: string
+}
+
 // Export all APIs
 const api = {
   auth: authAPI,

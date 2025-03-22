@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db-utils"
+import { type NextRequest, NextResponse } from "next/server"
+import { connectToDatabase } from "@/lib/db"
 import User from "@/models/User"
 import bcrypt from "bcryptjs"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     console.log("Connected to MongoDB")
     await connectToDatabase()
@@ -12,7 +12,7 @@ export async function GET() {
     const existingUser = await User.findOne({ email: "test@example.com" })
 
     if (existingUser) {
-      // Update password to ensure it's correct
+      // Update the password to ensure it's correct
       const salt = await bcrypt.genSalt(10)
       const hashedPassword = await bcrypt.hash("password123", salt)
 
@@ -20,32 +20,40 @@ export async function GET() {
       await existingUser.save()
 
       return NextResponse.json({
-        message: "Test user password updated",
-        email: "test@example.com",
-        password: "password123",
+        message: "Test user updated",
+        user: {
+          id: existingUser._id,
+          name: existingUser.name,
+          email: existingUser.email,
+          role: existingUser.role,
+        },
       })
     }
 
-    // Create a new test user
+    // Create test user
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash("password123", salt)
 
-    const newUser = new User({
+    const testUser = new User({
       name: "Test User",
       email: "test@example.com",
       password: hashedPassword,
-      role: "patient",
+      role: "admin", // Create as admin to have full access
     })
 
-    await newUser.save()
+    await testUser.save()
 
     return NextResponse.json({
-      message: "Test user created successfully",
-      email: "test@example.com",
-      password: "password123",
+      message: "Test user created",
+      user: {
+        id: testUser._id,
+        name: testUser.name,
+        email: testUser.email,
+        role: testUser.role,
+      },
     })
   } catch (error) {
-    console.error("Error creating test user:", error)
+    console.error("Seed error:", error)
     return NextResponse.json({ error: "Failed to create test user" }, { status: 500 })
   }
 }
