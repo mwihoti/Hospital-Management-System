@@ -17,24 +17,32 @@ export default function Header({ userRole = "patient", userName = "John Doe", us
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const pathname = usePathname()
 
-
   const getNavLinks = () => {
     switch (userRole) {
-        case "admin":
-            return [
-                { name: "Dashboard", href: "/admin/dashboard"},
-                { name: "Staff", href: "/admin/staff-management"},
-                { name: "Patients", href: "/admin/patient-management"},
-                { name: "Settings", href: "/admin/settings"}
-            ]
-        case "staff":
-            return [
-                { name: "Dashboard", href: "staff/dashboard"},
-                { name: "Appointments", href: "/staff/appointment"},
-                { name: "Patients", href: "staff/patients"},
-                { name: "prescriptions", href: "staff/prescriptions"},
-                { name: "Billing", href: "/staff/billing"}
-            ]
+      case "admin":
+        return [
+          { name: "Dashboard", href: "/admin/dashboard" },
+          { name: "Staff", href: "/admin/staff-management" },
+          { name: "Patients", href: "/admin/patient-management" },
+          { name: "Settings", href: "/admin/settings" },
+        ]
+      case "staff":
+        return [
+          { name: "Dashboard", href: "/staff/dashboard" },
+          { name: "Appointments", href: "/staff/appointments" },
+          { name: "Patients", href: "/staff/patients" },
+          { name: "Prescriptions", href: "/staff/prescriptions" },
+          { name: "Billing", href: "/staff/billing" },
+        ]
+      case "patient":
+      default:
+        return [
+          { name: "Dashboard", href: "/patient/dashboard" },
+          { name: "Appointments", href: "/patient/appointments" },
+          { name: "Medical Records", href: "/patient/medical-records" },
+          { name: "Prescriptions", href: "/patient/prescriptions" },
+          { name: "Billing", href: "/patient/billing" },
+        ]
     }
   }
 
@@ -218,3 +226,4 @@ export default function Header({ userRole = "patient", userName = "John Doe", us
     </header>
   )
 }
+

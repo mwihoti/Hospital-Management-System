@@ -1,18 +1,52 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Activity, LayoutDashboard, Calendar, FileText, CreditCard, User, LogOut, Menu, X } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
+import { Activity, LayoutDashboard, Calendar, FileText, CreditCard, User, LogOut, Menu, X } from 'lucide-react'
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const { data: session, status } = useSession()
+
+  // Redirect if not authenticated or not a patient
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/login")
+    } else if (session?.user?.role !== "patient") {
+      router.push("/")
+    }
+  }, [session, status, router])
 
   const isActive = (path: string) => {
     return pathname === path
+  }
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/auth/login" })
+  }
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!session?.user?.name) return "P"
+    
+    const nameParts = session.user.name.split(" ")
+    if (nameParts.length >= 2) {
+      return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
+    }
+    return nameParts[0][0].toUpperCase()
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    )
   }
 
   return (
@@ -105,14 +139,17 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
           <div className="p-4 border-t">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white mr-3">
-                JD
+                {getUserInitials()}
               </div>
               <div>
-                <p className="font-medium">John Doe</p>
-                <p className="text-sm text-gray-500">Patient</p>
+                <p className="font-medium">{session?.user?.name || "Patient"}</p>
+                <p className="text-sm text-gray-500">{session?.user?.role || "Patient"}</p>
               </div>
             </div>
-            <button className="flex items-center text-red-500 hover:text-red-700">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center text-red-500 hover:text-red-700"
+            >
               <LogOut className="h-5 w-5 mr-2" />
               Logout
             </button>
@@ -127,4 +164,3 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
     </div>
   )
 }
-

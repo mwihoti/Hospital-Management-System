@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Calendar, Clock, FileText, CreditCard } from "lucide-react"
 import { dashboardAPI } from "@/lib/api"
+import Link from "next/link"
 
 export default function PatientDashboard() {
   const { data: session, status } = useSession()
@@ -64,44 +65,51 @@ export default function PatientDashboard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Patient Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-2">Welcome, {session?.user?.name || "Patient"}</h1>
+      <p className="text-gray-600 mb-6">Here's an overview of your health information</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-lg shadow">
+        <Link href="/patient/appointments" className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
           <div className="flex items-center mb-2">
             <Calendar className="h-5 w-5 text-blue-500 mr-2" />
             <h2 className="text-lg font-semibold">Appointments</h2>
           </div>
           <p className="text-3xl font-bold">{stats.upcomingAppointments}</p>
           <p className="text-sm text-gray-500">Upcoming appointments</p>
-        </div>
+        </Link>
 
-        <div className="bg-white p-4 rounded-lg shadow">
+        <Link href="/patient/billing" className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
           <div className="flex items-center mb-2">
             <CreditCard className="h-5 w-5 text-red-500 mr-2" />
             <h2 className="text-lg font-semibold">Bills</h2>
           </div>
           <p className="text-3xl font-bold">{stats.pendingBills}</p>
           <p className="text-sm text-gray-500">Pending bills</p>
-        </div>
+        </Link>
 
-        <div className="bg-white p-4 rounded-lg shadow">
+        <Link
+          href="/patient/prescriptions"
+          className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow"
+        >
           <div className="flex items-center mb-2">
             <Clock className="h-5 w-5 text-green-500 mr-2" />
             <h2 className="text-lg font-semibold">Prescriptions</h2>
           </div>
           <p className="text-3xl font-bold">{stats.activePrescriptions}</p>
           <p className="text-sm text-gray-500">Active prescriptions</p>
-        </div>
+        </Link>
 
-        <div className="bg-white p-4 rounded-lg shadow">
+        <Link
+          href="/patient/medical-records"
+          className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow"
+        >
           <div className="flex items-center mb-2">
             <FileText className="h-5 w-5 text-purple-500 mr-2" />
             <h2 className="text-lg font-semibold">Medical Records</h2>
           </div>
           <p className="text-3xl font-bold">{stats.totalMedicalRecords}</p>
           <p className="text-sm text-gray-500">Total records</p>
-        </div>
+        </Link>
       </div>
 
       {/* Additional dashboard content can go here */}
