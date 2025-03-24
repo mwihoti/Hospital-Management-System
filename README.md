@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hospital Management System
 
-## Getting Started
+## Overview
 
-First, run the development server:
+Hospital Management System is a comprehensive web application designed to streamline healthcare facility operations. This platform integrates patient management, appointment scheduling, medical records, prescriptions and staff management in a secure and user-friendly interface.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+![Medicare Dashboard](https://raw.githubusercontent.com/mwihoti/Hospital-Management-System/main/public/dashboard-preview.png)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌟 Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Multi-role Access Control**: Different dashboards and capabilities for patients, doctors, and administrators
+- **Appointment Management**: Schedule, view, update, and cancel appointments
+- **Patient Records**: Comprehensive patient profiles with medical history
+- **Prescription Management**: Create and manage digital prescriptions
+- **Staff Management**: Add, view, and manage healthcare staff
+- **Medical Records**: Digital documentation of patient consultations and treatments
+- **Authentication & Authorization**: Secure access with JWT-based authentication
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 👥 User Roles & Capabilities
 
-## Learn More
+### Patients Can:
+- Register and manage their profile
+- Book appointments with specific departments
+- View and cancel upcoming appointments
+- Access their medical records
+- View their prescriptions
 
-To learn more about Next.js, take a look at the following resources:
+### Doctors Can:
+- View their scheduled appointments
+- View patient details and medical history
+- Create new medical records for patients
+- Issue and manage prescriptions
+- Update appointment status (completed, no-show, etc.)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Administrators Can:
+- Manage all patient accounts
+- Oversee all appointments across departments
+- Add and manage healthcare staff
+- Access system-wide reports and statistics
+- Configure system settings
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 💾 Data Models
 
-## Deploy on Vercel
+The system is built around these primary data models:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### User Model
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  email: String, // unique
+  password: String, // hashed
+  role: String, // "patient", "doctor", "admin"
+  dob: Date,
+  gender: String,
+  phone: String,
+  address: String,
+  bloodType: String,
+  medicalConditions: Array,
+  emergencyContact: {
+    name: String,
+    relationship: String,
+    phone: String
+  },
+  department: String, // for doctors only
+  specialty: String, // for doctors only
+  createdAt: Date,
+  updatedAt: Date
+}

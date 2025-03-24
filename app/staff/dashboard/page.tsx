@@ -196,9 +196,9 @@ export default function DoctorDashboard() {
       <div className="bg-white p-6 rounded-lg shadow mb-8">
         <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="/staff/schedule" className="flex items-center p-3 border rounded-md hover:bg-gray-50">
-            <Calendar className="h-5 w-5 text-blue-500 mr-2" />
-            <span>Manage Schedule</span>
+          <Link href="/staff/patients/new" className="flex items-center p-3 border rounded-md hover:bg-gray-50">
+            <PlusCircle className="h-5 w-5 text-blue-500 mr-2" />
+            <span>Create patient</span>
           </Link>
 
           <Link href="/staff/medical-records/new" className="flex items-center p-3 border rounded-md hover:bg-gray-50">

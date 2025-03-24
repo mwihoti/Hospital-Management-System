@@ -24,6 +24,11 @@ try {
       type: Date,
       default: Date.now,
     },
+     
+    department: {
+      type: String,
+      required: true
+    },
     diagnosis: {
       type: String,
       required: true,
