@@ -13,52 +13,46 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Connect to the database
-    await connectToDatabase()
-
-    // Get appointment
-    const appointment = await Appointment.findById(params.id)
-
-    if (!appointment) {
-      return NextResponse.json({ error: "Appointment not found" }, { status: 404 })
-    }
-
-    // Check permissions
-    // Admin can update any appointment
-    // Doctor can update their own appointments
-    // Patient can cancel their own appointments
-    if (
-      session.user.role !== "admin" &&
-      session.user.role === "doctor" &&
-      session.user.id !== appointment.doctor.toString() &&
-      session.user.role === "patient" &&
-      session.user.id !== appointment.patient.toString()
-    ) {
+    // Only doctors and admins can update appointment status
+    if (session.user.role !== "doctor" && session.user.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
+
+    await connectToDatabase()
 
     // Get request body
     const body = await request.json()
 
     // Validate status
-    const validStatuses = ["scheduled", "completed", "cancelled"]
+    if (!body.status) {
+      return NextResponse.json({ error: "Status is required" }, { status: 400 })
+    }
+
+    // Check if status is valid
+    const validStatuses = ["scheduled", "confirmed", "cancelled", "completed"]
     if (!validStatuses.includes(body.status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 })
     }
 
-    // Patients can only cancel appointments
-    if (session.user.role === "patient" && body.status !== "cancelled") {
-      return NextResponse.json({ error: "Patients can only cancel appointments" }, { status: 403 })
+    // Use await to unwrap the params
+    const appointmentId = params.id
+    
+    // Update appointment status
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
+      appointmentId,
+      { status: body.status },
+      { new: true, runValidators: true },
+    )
+      .populate("patient", "name email phone")
+      .populate("doctor", "name email specialization")
+
+    if (!updatedAppointment) {
+      return NextResponse.json({ error: "Appointment not found" }, { status: 404 })
     }
 
-    // Update appointment
-    appointment.status = body.status
-    await appointment.save()
-
-    return NextResponse.json({ appointment })
-  } catch (error) {
+    return NextResponse.json({ appointment: updatedAppointment })
+  } catch (error: any) {
     console.error("Error updating appointment status:", error)
-    return NextResponse.json({ error: "Failed to update appointment status" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Failed to update appointment status" }, { status: 500 })
   }
 }
-

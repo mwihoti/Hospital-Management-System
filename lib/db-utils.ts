@@ -114,7 +114,7 @@ export async function getMedicalRecords(patientId?: string) {
     return MedicalRecord.find(query).populate("patientId", "name email").populate("doctorId", "name specilization")
 }
 
-export async function getMedicalRecordsById(id: string) {
+export async function getMedicalRecordById(id: string) {
     await connectToDatabase()
 
     if (!ObjectId.isValid(id)) {

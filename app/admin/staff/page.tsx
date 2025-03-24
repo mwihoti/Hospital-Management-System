@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { UserPlus, Search, Filter, ChevronDown, ChevronRight } from "lucide-react"
+import { UserPlus, Search, Filter, ChevronDown, Trash2, ChevronRight } from "lucide-react"
 
 export default function StaffPage() {
   const { data: session, status } = useSession()
@@ -16,6 +16,8 @@ export default function StaffPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [filter, setFilter] = useState("all")
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
+
 
   useEffect(() => {
     async function loadStaff() {
@@ -33,7 +35,7 @@ export default function StaffPage() {
         if (!response.ok) throw new Error("Failed to fetch staff")
 
         const data = await response.json()
-        setStaff(data.users || [])
+        setStaff(data || [])
         setTotalPages(data.totalPages || 1)
         setError("")
       } catch (err) {
@@ -63,6 +65,29 @@ export default function StaffPage() {
     setFilter(newFilter)
     setCurrentPage(1)
   }
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      return
+    }
+    try {
+      setDeleteLoading(userId)
+
+      const response = await fetch(`/api/users/${userId}, {
+        method: "DELETE}`)
+    
+    if (!response.ok) {
+      throw new Error("Failed to delete user")
+    }
+
+    // remove the deleted doctor fromstate
+    setStaff(staff.filter((staff) => staff._id !== userId))
+  }catch (err) {
+    console.error("Error deleting user:", err)
+    alert("Failed to delete user. Please try again.")
+  } finally {
+    setDeleteLoading(null)
+  }
+}
 
   if (loading && currentPage === 1) {
     return (
@@ -82,6 +107,10 @@ export default function StaffPage() {
         >
           <UserPlus className="h-4 w-4 mr-2" />
           Add New Staff
+        </Link>
+        <Link href='/admin/dashboard'>
+        <button className="p-4 border rounded-md ">Back</button>
+
         </Link>
       </div>
 
@@ -223,6 +252,17 @@ export default function StaffPage() {
                         >
                           Edit
                         </Link>
+                        <button
+                        onClick={() => handleDeleteUser(staff._id)}
+                        disabled={deleteLoading === staff._id}
+                        className="text-red-600 p-4 hover:text-red-900"
+                      >
+                        {deleteLoading === staff._id ? (
+                          <span className="inline-block animate-spin h-4 w-4 border-t-2 border-red-500 rounded-full"></span>
+                        ) : (
+                          <Trash2 className="h-4 w-4 inline" />
+                        )}
+                      </button>
                       </td>
                     </tr>
                   ))}
@@ -256,6 +296,7 @@ export default function StaffPage() {
                   >
                     Next
                   </button>
+
                 </div>
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>

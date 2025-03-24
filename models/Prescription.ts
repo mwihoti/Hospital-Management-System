@@ -15,7 +15,7 @@ export interface IPrescription extends Document {
     date: Date
     medications: Medication[]
     notes?: string
-    status: "Active" | "Completed" | "Cancelled"
+   // status: "Active" | "Completed" | "Cancelled"
     refillsRemaining: number
     createdAt: Date
     updatedAt: Date
@@ -76,12 +76,7 @@ const PrescriptionSchema: Schema = new Schema(
         notes: {
             type: String,
         }, 
-        status: {
-            type: String,
-            required: [true, "Status is required"],
-            enum: ["Active", "Completed", "Cancelled"],
-            default: "Active"
-        },
+        
         refillsRemaining: {
             type: Number,
             default: 0,

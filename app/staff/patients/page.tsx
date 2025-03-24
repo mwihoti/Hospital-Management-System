@@ -76,7 +76,7 @@ export default function DoctorPatientsPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center space-x-3 justify-center">
+      <div className="mb-6 flex  space-x-6 justify-center items-center">
         <h1 className="text-2xl font-bold">My Patients</h1>
         <p className="text-gray-600">View and manage your patients</p>
         <Link href='/staff/dashboard'>

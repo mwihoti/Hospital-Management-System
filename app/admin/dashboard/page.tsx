@@ -155,10 +155,7 @@ export default function AdminDashboard() {
             <div className="bg-yellow-100 p-3 rounded-full">
               <DollarSign className="h-6 w-6 text-yellow-500" />
             </div>
-            <div className="ml-4">
-              <h2 className="text-lg font-semibold">Revenue</h2>
-              <p className="text-3xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
-            </div>
+         
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-500">View financial reports</span>
@@ -181,11 +178,7 @@ export default function AdminDashboard() {
             <span>Add New Staff</span>
           </Link>
 
-          <Link href="/admin/appointments/new" className="flex items-center p-3 border rounded-md hover:bg-gray-50">
-            <Calendar className="h-5 w-5 text-purple-500 mr-2" />
-            <span>Schedule Appointment</span>
-          </Link>
-
+        
           <Link href="/admin/medical-records" className="flex items-center p-3 border rounded-md hover:bg-gray-50">
             <FileText className="h-5 w-5 text-red-500 mr-2" />
             <span>View Medical Records</span>

@@ -6,14 +6,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions)
-
-    // Check if user is authenticated
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Connect to the database
     await connectToDatabase()
 
     // Get user
@@ -23,64 +15,51 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // Check permissions
-    // Admin can access any user
-    // Doctor can access their patients
-    // Patient can only access their own profile
-    if (session.user.role !== "admin" && session.user.role === "patient" && session.user.id !== params.id) {
-      // For doctors, we should check if the requested user is their patient
-      // This would require a more complex query with a lookup to appointments
-      // For simplicity, we'll allow doctors to access any patient
-      if (session.user.role !== "doctor") {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      }
-    }
-
     return NextResponse.json({ user })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching user:", error)
-    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Failed to fetch user" }, { status: 500 })
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions)
 
-    // Check if user is authenticated
+    // Check if user is authenticated and has permission
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check permissions
-    // Admin can update any user
-    // Users can update their own profile
+    // Only allow users to update their own profile or admins to update any profile
     if (session.user.role !== "admin" && session.user.id !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Connect to the database
     await connectToDatabase()
 
     // Get request body
     const body = await request.json()
 
-    // Remove sensitive fields if not admin
-    if (session.user.role !== "admin") {
-      delete body.role
-    }
+    // Remove sensitive fields that shouldn't be updated directly
+    delete body.password
+    delete body.role // Only admins should change roles through a separate endpoint
 
     // Update user
-    const updatedUser = await User.findByIdAndUpdate(params.id, { $set: body }, { new: true }).select("-password")
+    const updatedUser = await User.findByIdAndUpdate(
+      params.id,
+      { $set: body },
+      { new: true, runValidators: true },
+    ).select("-password")
 
     if (!updatedUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
     return NextResponse.json({ user: updatedUser })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating user:", error)
-    return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Failed to update user" }, { status: 500 })
   }
 }
 
@@ -88,17 +67,11 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const session = await getServerSession(authOptions)
 
-    // Check if user is authenticated
-    if (!session) {
+    // Check if user is authenticated and is an admin
+    if (!session || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only admin can delete users
-    if (session.user.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
-    // Connect to the database
     await connectToDatabase()
 
     // Delete user
@@ -109,9 +82,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     return NextResponse.json({ message: "User deleted successfully" })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting user:", error)
-    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Failed to delete user" }, { status: 500 })
   }
 }
 
