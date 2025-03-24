@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db-utils"
 import User from "@/models/User"
 import Appointment from "@/models/Appointment"
-import Bill from "@/models/Bill"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
@@ -10,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    // Check if user is authenticated and is an admin
+    // Check if user is authenticated and is admin
     if (!session || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -18,18 +17,19 @@ export async function GET(request: NextRequest) {
     // Connect to the database
     await connectToDatabase()
 
-    // Count total patients
+    // Get total patients
     const totalPatients = await User.countDocuments({ role: "patient" })
 
-    // Count total doctors
+    // Get total doctors
     const totalDoctors = await User.countDocuments({ role: "doctor" })
 
-    // Count total appointments
+    // Get total appointments
     const totalAppointments = await Appointment.countDocuments()
 
-    // Calculate total revenue from paid bills
-    const paidBills = await Bill.find({ status: "paid" })
-    const totalRevenue = paidBills.reduce((sum, bill) => sum + (bill.amount || 0), 0)
+    // Calculate total revenue (this is a placeholder, real implementation would depend on your billing model)
+    // For this example, we'll assume each completed appointment generates $100 revenue
+    const completedAppointments = await Appointment.countDocuments({ status: "completed" })
+    const totalRevenue = completedAppointments * 100
 
     return NextResponse.json({
       totalPatients,

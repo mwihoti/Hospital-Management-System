@@ -1,147 +1,100 @@
-import { NextResponse } from "next/server"
-import connectToDatabase from "@/lib/mongodb"
+import { type NextRequest, NextResponse } from "next/server"
+import { connectToDatabase } from "@/lib/db-utils"
 import MedicalRecord from "@/models/MedicalRecord"
-import User from "@/models/User"
-import { verifyToken } from "@/lib/auth"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import mongoose from "mongoose"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const token = request.headers.get("Authorization")?.split(" ")[1]
-    if (!token) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+    const session = await getServerSession(authOptions)
+
+    // Check if user is authenticated
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
-
+    // Connect to the database
     await connectToDatabase()
 
     // Get query parameters
     const url = new URL(request.url)
     const patientId = url.searchParams.get("patient")
     const doctorId = url.searchParams.get("doctor")
-    const type = url.searchParams.get("type")
     const limit = Number.parseInt(url.searchParams.get("limit") || "10")
-    const page = Number.parseInt(url.searchParams.get("page") || "1")
 
     // Build query
     const query: any = {}
 
-    // Role-based access control
-    if (decoded.role === "patient") {
-      // Patients can only see their own records
-      query.patient = decoded.userId
-    } else if (decoded.role === "doctor") {
-      // Doctors can see records of their patients or records they created
-      if (patientId) {
-        query.patient = patientId
-      } else {
-        query.doctor = decoded.userId
-      }
-    } else if (decoded.role === "admin") {
-      // Admins can filter by patient or doctor
-      if (patientId) {
-        query.patient = patientId
-      }
-
-      if (doctorId) {
-        query.doctor = doctorId
-      }
+    if (patientId) {
+      query.patient = new mongoose.Types.ObjectId(patientId)
     }
 
-    // Filter by type if provided
-    if (type) {
-      query.type = type
+    if (doctorId) {
+      query.doctor = new mongoose.Types.ObjectId(doctorId)
     }
 
-    // Calculate pagination
-    const skip = (page - 1) * limit
+    // If user is a patient, they can only see their own medical records
+    if (session.user.role === "patient") {
+      query.patient = new mongoose.Types.ObjectId(session.user.id)
+    }
+
+    // If user is a doctor, they can only see medical records they created
+    if (session.user.role === "doctor" && !doctorId) {
+      query.doctor = new mongoose.Types.ObjectId(session.user.id)
+    }
 
     // Get medical records
     const records = await MedicalRecord.find(query)
       .populate("patient", "name email")
-      .populate("doctor", "name email specialization department")
-      .skip(skip)
-      .limit(limit)
+      .populate("doctor", "name email")
       .sort({ date: -1 })
+      .limit(limit)
 
-    // Get total count
-    const totalRecords = await MedicalRecord.countDocuments(query)
-
-    return NextResponse.json({
-      records,
-      pagination: {
-        total: totalRecords,
-        page,
-        limit,
-        pages: Math.ceil(totalRecords / limit),
-      },
-    })
-  } catch (error: any) {
-    console.error("Get medical records error:", error)
-    return NextResponse.json({ error: error.message || "Failed to get medical records" }, { status: 500 })
+    return NextResponse.json({ records })
+  } catch (error) {
+    console.error("Error fetching medical records:", error)
+    return NextResponse.json({ error: "Failed to fetch medical records" }, { status: 500 })
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const token = request.headers.get("Authorization")?.split(" ")[1]
-    if (!token) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+    const session = await getServerSession(authOptions)
+
+    // Check if user is authenticated and is a doctor or admin
+    if (!session || (session.user.role !== "doctor" && session.user.role !== "admin")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
-
-    // Only doctors and admins can create medical records
-    if (decoded.role !== "doctor" && decoded.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized. Doctor or admin access required" }, { status: 403 })
-    }
-
+    // Connect to the database
     await connectToDatabase()
 
+    // Get request body
     const body = await request.json()
-    const { patient, doctor, date, type, diagnosis, notes, department, attachments } = body
 
     // Validate required fields
-    if (!patient || !doctor || !type || !diagnosis || !notes || !department) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    // Verify that the doctor exists and is a doctor
-    const doctorUser = await User.findById(doctor)
-    if (!doctorUser || doctorUser.role !== "doctor") {
-      return NextResponse.json({ error: "Invalid doctor" }, { status: 400 })
-    }
-
-    // Verify that the patient exists
-    const patientUser = await User.findById(patient)
-    if (!patientUser) {
-      return NextResponse.json({ error: "Invalid patient" }, { status: 400 })
+    if (!body.patient || !body.title || !body.description) {
+      return NextResponse.json({ error: "Patient, title, and description are required" }, { status: 400 })
     }
 
     // Create medical record
-    const medicalRecord = await MedicalRecord.create({
-      patient,
-      doctor,
-      date: date ? new Date(date) : new Date(),
-      type,
-      diagnosis,
-      notes,
-      department,
-      attachments: attachments || [],
+    const newRecord = new MedicalRecord({
+      ...body,
+      doctor: session.user.role === "doctor" ? session.user.id : body.doctor,
+      date: new Date(),
     })
 
-    return NextResponse.json({ message: "Medical record created successfully", record: medicalRecord }, { status: 201 })
-  } catch (error: any) {
-    console.error("Create medical record error:", error)
-    return NextResponse.json({ error: error.message || "Failed to create medical record" }, { status: 500 })
+    await newRecord.save()
+
+    // Populate patient and doctor
+    await newRecord.populate("patient", "name email")
+    await newRecord.populate("doctor", "name email")
+
+    return NextResponse.json({ record: newRecord }, { status: 201 })
+  } catch (error) {
+    console.error("Error creating medical record:", error)
+    return NextResponse.json({ error: "Failed to create medical record" }, { status: 500 })
   }
 }
 

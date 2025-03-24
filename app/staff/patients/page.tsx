@@ -4,12 +4,12 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { UserPlus, Search, Filter, ChevronDown, ChevronRight } from "lucide-react"
+import { Search, Filter, ChevronDown, ChevronRight } from "lucide-react"
 
-export default function StaffPage() {
+export default function DoctorPatientsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [staff, setStaff] = useState([])
+  const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
@@ -18,7 +18,9 @@ export default function StaffPage() {
   const [filter, setFilter] = useState("all")
 
   useEffect(() => {
-    async function loadStaff() {
+    async function loadPatients() {
+      if (!session?.user?.id) return
+
       try {
         setLoading(true)
 
@@ -29,26 +31,26 @@ export default function StaffPage() {
           filter: filter,
         })
 
-        const response = await fetch(`/api/users/role/doctor?${queryParams}`)
-        if (!response.ok) throw new Error("Failed to fetch staff")
+        const response = await fetch(`/api/doctor/${session.user.id}/patients?${queryParams}`)
+        if (!response.ok) throw new Error("Failed to fetch patients")
 
         const data = await response.json()
-        setStaff(data.users || [])
+        setPatients(data.patients || [])
         setTotalPages(data.totalPages || 1)
         setError("")
       } catch (err) {
-        console.error("Error loading staff:", err)
-        setError("Failed to load staff. Please try again later.")
+        console.error("Error loading patients:", err)
+        setError("Failed to load patients. Please try again later.")
       } finally {
         setLoading(false)
       }
     }
 
-    if (status === "authenticated" && session?.user?.role === "admin") {
-      loadStaff()
+    if (status === "authenticated" && session?.user?.role === "doctor") {
+      loadPatients()
     } else if (status === "unauthenticated") {
       router.push("/auth/login")
-    } else if (status === "authenticated" && session?.user?.role !== "admin") {
+    } else if (status === "authenticated" && session?.user?.role !== "doctor") {
       router.push(`/${session.user.role}/dashboard`)
     }
   }, [session, status, router, currentPage, searchTerm, filter])
@@ -74,14 +76,12 @@ export default function StaffPage() {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Staff</h1>
-        <Link
-          href="/admin/staff/new"
-          className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add New Staff
+      <div className="mb-6 flex items-center space-x-3 justify-center">
+        <h1 className="text-2xl font-bold">My Patients</h1>
+        <p className="text-gray-600">View and manage your patients</p>
+        <Link href='/staff/dashboard'>
+        <button className="p-4 border rounded-md ">Back</button>
+
         </Link>
       </div>
 
@@ -93,7 +93,7 @@ export default function StaffPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="Search staff by name or email..."
+                placeholder="Search patients by name or email..."
                 className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -117,19 +117,19 @@ export default function StaffPage() {
                   className={`block px-4 py-2 text-sm w-full text-left ${filter === "all" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-100"}`}
                   onClick={() => handleFilterChange("all")}
                 >
-                  All Staff
+                  All Patients
                 </button>
                 <button
-                  className={`block px-4 py-2 text-sm w-full text-left ${filter === "doctors" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-100"}`}
-                  onClick={() => handleFilterChange("doctors")}
+                  className={`block px-4 py-2 text-sm w-full text-left ${filter === "recent" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-100"}`}
+                  onClick={() => handleFilterChange("recent")}
                 >
-                  Doctors
+                  Recent Patients
                 </button>
                 <button
-                  className={`block px-4 py-2 text-sm w-full text-left ${filter === "nurses" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-100"}`}
-                  onClick={() => handleFilterChange("nurses")}
+                  className={`block px-4 py-2 text-sm w-full text-left ${filter === "upcoming" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-100"}`}
+                  onClick={() => handleFilterChange("upcoming")}
                 >
-                  Nurses
+                  Upcoming Appointments
                 </button>
               </div>
             </div>
@@ -143,24 +143,17 @@ export default function StaffPage() {
         </div>
       )}
 
-      {/* Staff List */}
+      {/* Patients List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {staff.length === 0 ? (
+        {patients.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-500 mx-auto mb-4">
-              <UserPlus className="h-8 w-8" />
+            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 mx-auto mb-4">
+              <Search className="h-8 w-8" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No staff found</h3>
-            <p className="text-gray-500 mb-6">
-              {searchTerm ? "Try a different search term" : "Add your first staff member to get started"}
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No patients found</h3>
+            <p className="text-gray-500">
+              {searchTerm ? "Try a different search term" : "You don't have any patients yet"}
             </p>
-            <Link
-              href="/admin/staff/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add New Staff
-            </Link>
           </div>
         ) : (
           <>
@@ -169,16 +162,16 @@ export default function StaffPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Staff
+                      Patient
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Contact
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Specialty
+                      Last Visit
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date Added
+                      Next Appointment
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -186,42 +179,56 @@ export default function StaffPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {staff.map((member) => (
-                    <tr key={member._id} className="hover:bg-gray-50">
+                  {patients.map((patient) => (
+                    <tr key={patient._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-500">
-                            {member.name
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+                            {patient.name
                               .split(" ")
                               .map((n) => n[0])
                               .join("")
                               .toUpperCase()}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">Dr. {member.name}</div>
-                            <div className="text-sm text-gray-500">ID: {member._id.substring(0, 8)}</div>
+                            <div className="text-sm font-medium text-gray-900">{patient.name}</div>
+                            <div className="text-sm text-gray-500">ID: {patient._id.substring(0, 8)}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{member.email}</div>
-                        <div className="text-sm text-gray-500">{member.phone || "No phone"}</div>
+                        <div className="text-sm text-gray-900">{patient.email}</div>
+                        <div className="text-sm text-gray-500">{patient.phone || "No phone"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{member.specialty || "Not specified"}</div>
+                        <div className="text-sm text-gray-900">
+                          {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : "No visits yet"}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{new Date(member.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm text-gray-900">
+                          {patient.nextAppointment ? (
+                            <>
+                              {new Date(patient.nextAppointment.date).toLocaleDateString()} at{" "}
+                              {patient.nextAppointment.time}
+                            </>
+                          ) : (
+                            "No upcoming appointments"
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Link href={`/admin/staff/${member._id}`} className="text-blue-600 hover:text-blue-900 mr-3">
+                        <Link
+                          href={`/staff/patients/${patient._id}`}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
                           View
                         </Link>
                         <Link
-                          href={`/admin/staff/${member._id}/edit`}
+                          href={`/staff/medical-records/new?patient=${patient._id}`}
                           className="text-indigo-600 hover:text-indigo-900"
                         >
-                          Edit
+                          Add Record
                         </Link>
                       </td>
                     </tr>

@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Users, Calendar, CheckCircle, Clock, FileText, PlusCircle, Edit, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function DoctorDashboard() {
   const { data: session, status } = useSession()
@@ -19,6 +20,9 @@ export default function DoctorDashboard() {
   const [recentPatients, setRecentPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const handleLogout = async () => {
+      await signOut({ callbackUrl: "/auth/login" })
+    }
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -108,9 +112,11 @@ export default function DoctorDashboard() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-center space-x-2">
         <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
         <p className="text-gray-600">Welcome back, Dr. {session?.user?.name}. Here's your schedule for today.</p>
+        <Button  onClick={handleLogout}
+              className="flex  mr-16 items-center text-red-500 hover:text-red-700">SignOut</Button>
       </div>
 
       {/* Stats Cards */}

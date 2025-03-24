@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
@@ -30,11 +29,9 @@ export default function AdminDashboard() {
   const [recentAppointments, setRecentAppointments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/auth/login" })
+    await signOut({callbackUrl: "/auth/login"})
   }
-
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -47,7 +44,6 @@ export default function AdminDashboard() {
         const statsData = await statsResponse.json()
         setStats(statsData)
 
-       
         // Fetch recent patients
         const patientsResponse = await fetch("/api/users/role/patient?limit=5")
         if (!patientsResponse.ok) throw new Error("Failed to fetch recent patients")
@@ -97,12 +93,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-6 ">
-      <div className="mb-6 flex space-x-3">
+    <div className="p-6">
+      <div className="mb-6 flex items-center justify-center space-x-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         <p className="text-gray-600">Welcome back, {session?.user?.name}. Here's what's happening in your hospital.</p>
-        <Button  onClick={handleLogout}
-              className="flex  mr-16 items-center text-red-500 hover:text-red-700">SignOut</Button>
+        <button className="border p-4 rounded" onClick={handleLogout}>Signout</button>
       </div>
 
       {/* Stats Cards */}
@@ -288,8 +283,8 @@ export default function AdminDashboard() {
                                   : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                        </span>
+{appointment.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : "Unknown"}
+</span>
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-gray-400" />
