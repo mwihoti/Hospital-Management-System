@@ -13,18 +13,7 @@ export default function Home() {
             <h1 className="text-2xl font-light text-[#333333]">MediCare</h1>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/dashboard" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/patients" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
-              Patients
-            </Link>
-            <Link href="/appointments" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
-              Appointments
-            </Link>
-            <Link href="/staff" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
-              Staff
-            </Link>
+            
             <button className="bg-[#4A90E2] hover:bg-[#3A80D2] text-white px-4 py-2 rounded-md transition-colors">
             <Link href="/auth/login" className="text-[#333333] hover:text-[#4A90E2] transition-colors">
               Login
@@ -80,13 +69,13 @@ export default function Home() {
             icon={<User className="h-10 w-10 text-[#4A90E2]" />}
             title="Patient Management"
             description="Register and manage patient profiles, medical history, and contact information with ease."
-            href="/patients"
+            href="/patient/dashboard"
           />
           <FeatureCard
             icon={<Calendar className="h-10 w-10 text-[#4A90E2]" />}
             title="Appointment Scheduling"
             description="Intuitive calendar interface with drag-and-drop scheduling and automated reminders."
-            href="/appointments"
+            href="/patient/appointments"
           />
           <FeatureCard
             icon={<User className="h-10 w-10 text-[#4A90E2]" />}
@@ -98,20 +87,15 @@ export default function Home() {
             icon={<FileText className="h-10 w-10 text-[#4A90E2]" />}
             title="Medical Records"
             description="Digital health records with test results, prescriptions, and treatment history."
-            href="/records"
+            href="/patient/medical-records"
           />
           <FeatureCard
             icon={<CreditCard className="h-10 w-10 text-[#4A90E2]" />}
             title="Billing & Payments"
             description="Streamlined billing with insurance processing and multiple payment methods."
-            href="/billing"
+            href="patient/billing"
           />
-          <FeatureCard
-            icon={<Package className="h-10 w-10 text-[#4A90E2]" />}
-            title="Pharmacy & Inventory"
-            description="Track medications, supplies, and automate reordering processes."
-            href="/inventory"
-          />
+          
         </div>
       </section>
 
