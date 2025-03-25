@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { Mail, Phone, Calendar, Search, Plus, Trash2 } from "lucide-react"
+import { Mail, Phone, Calendar, Search, Plus, ArrowLeft, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 export default function PatientsPage() {
@@ -82,7 +82,7 @@ export default function PatientsPage() {
           <h1 className="text-2xl font-bold">Patients</h1>
           <p className="text-gray-600">View and manage all patients</p>
         </div>
-        <div className="mt-4 md:mt-0">
+        <div className="mt-4 flex justify-between space-x-6 items-center md:mt-0">
           <Link
             href="/admin/patients/new"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -90,6 +90,10 @@ export default function PatientsPage() {
             <Plus className="h-4 w-4 mr-2" />
             Add New Patient
           </Link>
+          <Link href="/admin/dashboard" className="flex items-center text-blue-500 hover:underline mb-4">
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back to Dashboard
+        </Link>
         </div>
       </div>
 

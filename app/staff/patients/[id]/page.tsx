@@ -136,7 +136,7 @@ export default function PatientProfilePage({ params }: { params: { id: string } 
               <Phone className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
               <div>
                 <p className="text-sm text-gray-500">Phone</p>
-                <p>{patient.phone || "Not provided"}</p>
+                <p>{patient.contactNumber || "Not provided"}</p>
               </div>
             </div>
 

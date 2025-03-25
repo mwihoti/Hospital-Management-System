@@ -56,6 +56,8 @@ export default function Register() {
 
       // Remove confirmPassword from data sent to API
       const { confirmPassword, ...dataToSend } = formData
+      console.log("Data being sent to API:", dataToSend)
+
 
       const response = await fetch("/api/auth/register", {
         method: "POST",

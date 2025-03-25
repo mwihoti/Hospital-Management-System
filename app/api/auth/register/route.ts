@@ -5,8 +5,13 @@ import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, role } = await request.json()
+    const formData = await request.json()
+    console.log("Received form data", formData)
 
+    const { name, email, password, role, department,
+       contactNumber, specialization, address, dateOfBirth, gender, bloodGroup } = formData
+
+     
     // Validate input
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 })
@@ -31,6 +36,13 @@ export async function POST(request: NextRequest) {
       email,
       password: hashedPassword,
       role: role || "patient",
+      specialization,
+      department,
+      contactNumber,
+      address,
+      dateOfBirth,
+      gender,
+      bloodGroup
     })
 
     // Save user to database

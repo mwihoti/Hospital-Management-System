@@ -23,6 +23,44 @@ const userSchema = new mongoose.Schema({
     enum: ["admin", "doctor", "patient"],
     default: "patient",
   },
+  specialization: {
+    type: String,
+    required: function () {
+      return this.role === "doctor"
+    },
+    trim: true
+  },
+  department: {
+    type: String,
+    required: function () {
+      return this.role === "doctor"
+    },
+    trim: true
+  },
+  contactNumber: {
+    type: String,
+    required: [true, "ContactNumber is required"],
+    trim: true
+  },
+  address: {
+    type: String,
+    required: [true, "ContactNumber is required"],
+    trim: true
+  },
+  dateOfBirth: {
+    type: Date
+  },
+  gender: {
+    type: String,
+    enum: ["male", "female", "other"]
+  },
+  bloodGroup: {
+    type: String,
+    enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+  },
+  medicalHistory: {
+    type: [String]
+  },
   createdAt: {
     type: Date,
     default: Date.now,

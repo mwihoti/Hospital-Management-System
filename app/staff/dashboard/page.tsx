@@ -291,7 +291,7 @@ export default function DoctorDashboard() {
                                 : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                        {appointment.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1): "Unknown"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
