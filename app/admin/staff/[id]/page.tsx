@@ -28,7 +28,7 @@ export default function StaffDetailPage() {
         }
 
         const data = await response.json()
-        setStaff(data)
+        setStaff(data.user)
       } catch (err) {
         console.error("Error fetching staff details:", err)
         setError(err.message)

@@ -234,7 +234,7 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{member.email}</div>
-                        <div className="text-sm text-gray-500">{member.phone || "No phone"}</div>
+                        <div className="text-sm text-gray-500">{member.contactNumber || "No phone"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{member.specialty || "Not specified"}</div>

@@ -1,63 +1,65 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Calendar, Clock, FileText, Activity, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 
 export default function AppointmentDetailPage({ params }: { params: { id: string } }) {
-  const { data: session } = useSession()
-  const router = useRouter()
-  const [appointment, setAppointment] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [updating, setUpdating] = useState(false)
-
-  useEffect(() => {
-    async function fetchAppointment() {
+    const { id } = use(params)
+  
+    const { data: session } = useSession()
+    const router = useRouter()
+    const [appointment, setAppointment] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState("")
+    const [updating, setUpdating] = useState(false)
+  
+    useEffect(() => {
+      async function fetchAppointment() {
+        try {
+          const response = await fetch(`/api/appointments/${id}`)
+          if (!response.ok) throw new Error("Failed to fetch appointment")
+  
+          const data = await response.json()
+          setAppointment(data.appointment)
+        } catch (err) {
+          console.error("Error fetching appointment:", err)
+          setError("Failed to load appointment. Please try again later.")
+        } finally {
+          setLoading(false)
+        }
+      }
+  
+      if (session?.user) {
+        fetchAppointment()
+      }
+    }, [session, id])
+  
+    const updateStatus = async (status: string) => {
       try {
-        const response = await fetch(`/api/appointments/${params.id}`)
-        if (!response.ok) throw new Error("Failed to fetch appointment")
-
+        setUpdating(true)
+  
+        const response = await fetch(`/api/appointments/${id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        })
+  
+        if (!response.ok) throw new Error("Failed to update appointment")
+  
         const data = await response.json()
         setAppointment(data.appointment)
       } catch (err) {
-        console.error("Error fetching appointment:", err)
-        setError("Failed to load appointment. Please try again later.")
+        console.error("Error updating appointment:", err)
+        setError("Failed to update appointment. Please try again later.")
       } finally {
-        setLoading(false)
+        setUpdating(false)
       }
     }
-
-    if (session?.user) {
-      fetchAppointment()
-    }
-  }, [session, params.id])
-
-  const updateStatus = async (status: string) => {
-    try {
-      setUpdating(true)
-
-      const response = await fetch(`/api/appointments/${params.id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-      })
-
-      if (!response.ok) throw new Error("Failed to update appointment")
-
-      const data = await response.json()
-      setAppointment(data.appointment)
-    } catch (err) {
-      console.error("Error updating appointment:", err)
-      setError("Failed to update appointment. Please try again later.")
-    } finally {
-      setUpdating(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -98,6 +100,9 @@ export default function AppointmentDetailPage({ params }: { params: { id: string
   }
 
   const getStatusColor = (status: string) => {
+    if (typeof status !== 'string') {
+        return 'bg-gray-100 text-gray-800'
+    }
     switch (status.toLowerCase()) {
       case "scheduled":
         return "bg-blue-100 text-blue-800"
