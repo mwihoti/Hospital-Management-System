@@ -1,6 +1,6 @@
 import type React from "react"
 import Link from "next/link"
-import { Activity, User, Calendar, FileText, CreditCard, Package, ChevronRight } from "lucide-react"
+import { Activity, User, Calendar, FileText, CreditCard, ChevronRight } from "lucide-react"
 
 export default function Home() {
   return (

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db"
+import { connectToDatabase } from "@/lib/db-utils"
 import User from "@/models/User"
 import bcrypt from "bcryptjs"
 
@@ -8,8 +8,12 @@ export async function GET(request: NextRequest) {
     console.log("Connected to MongoDB")
     await connectToDatabase()
 
+    // use query parameters from request url
+    const url = new URL(request.url)
+    const email = url.searchParams.get("email") || "test@example.com"
+
     // Check if test user already exists
-    const existingUser = await User.findOne({ email: "test@example.com" })
+    const existingUser = await User.findOne({ email})
 
     if (existingUser) {
       // Update the password to ensure it's correct

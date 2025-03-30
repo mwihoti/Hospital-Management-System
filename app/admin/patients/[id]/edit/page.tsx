@@ -88,7 +88,7 @@ export default function EditPatientPage() {
         const { name, value} = e.target
 
         if (name.includes(".")) {
-            const [patient, child] = name.split(".")
+            const [parent, child] = name.split(".")
             setFormData((prev) => ({
                 ...prev,
                 [parent]: {

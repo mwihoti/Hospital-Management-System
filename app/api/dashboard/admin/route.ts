@@ -5,9 +5,9 @@ import Appointment from "@/models/Appointment"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(req, ...authOptions)
 
     // Check if user is authenticated and is admin
     if (!session || session.user.role !== "admin") {

@@ -51,6 +51,7 @@ export default function MedicalRecordsPage() {
         setLoading(false)
       }
     }
+    fetchRecords()
 
     // For demo purposes, use mock data
     setTimeout(() => {
@@ -310,26 +311,56 @@ export default function MedicalRecordsPage() {
               ) : filteredRecords.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">No records found matching your criteria.</div>
               ) : (
-                filteredRecords.map((record) => (
-                  <div
-                    key={record.id}
-                    className={`p-4 cursor-pointer hover:bg-gray-50 ${selectedRecord?.id === record.id ? "bg-blue-50" : ""}`}
-                    onClick={() => selectRecord(record)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-[#333333]">{record.diagnosis}</h3>
-                        <p className="text-sm text-[#666666]">
-                          {record.doctor} - {record.department}
-                        </p>
-                        <p className="text-xs text-[#666666] mt-1">{new Date(record.date).toLocaleDateString()}</p>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs ${getTypeColor(record.type)}`}>
-                        {record.type}
-                      </span>
-                    </div>
-                  </div>
-                ))
+                // Update your record list item to use the expanded state
+filteredRecords.map((record) => (
+  <div
+    key={record.id}
+    className={`p-4 cursor-pointer hover:bg-gray-50 ${selectedRecord?.id === record.id ? "bg-blue-50" : ""}`}
+    onClick={() => selectRecord(record)}
+  >
+    <div className="flex justify-between items-start">
+      <div>
+        <h3 className="font-medium text-[#333333]">{record.diagnosis}</h3>
+        <p className="text-sm text-[#666666]">
+          {record.doctor} - {record.department}
+        </p>
+        <p className="text-xs text-[#666666] mt-1">{new Date(record.date).toLocaleDateString()}</p>
+      </div>
+      <span className={`px-2 py-1 rounded-full text-xs ${getTypeColor(record.type)}`}>
+        {record.type}
+      </span>
+    </div>
+    
+    {/* Add onClick stopPropagation to prevent triggering the parent's onClick */}
+    <button 
+      className="text-sm text-blue-500 mt-2 flex items-center"
+      onClick={(e) => {
+        e.stopPropagation()
+        toggleRecordExpansion(record.id)
+      }}
+    >
+      {expandedRecords[record.id] ? "Hide Details" : "Show Details"}
+    </button>
+    
+    {/* Display expanded content */}
+    {expandedRecords[record.id] && (
+      <div className="mt-3 pt-3 border-t text-sm">
+        <p className="text-gray-700">{record.notes}</p>
+        {record.attachments && record.attachments.length > 0 && (
+          <div className="mt-2">
+            <p className="font-medium text-xs text-gray-500">Attachments:</p>
+            <ul className="list-disc pl-5 text-xs text-gray-600">
+              {record.attachments.map(attachment => (
+                <li key={attachment.id}>{attachment.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+))
+
               )}
             </div>
           </div>

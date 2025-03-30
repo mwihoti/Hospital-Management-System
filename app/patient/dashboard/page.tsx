@@ -4,12 +4,12 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Calendar, Clock, FileText, CreditCard, PlusCircle, ChevronRight, User, Activity } from "lucide-react"
+import { Calendar, Clock,  CreditCard, PlusCircle, ChevronRight, User, Activity } from "lucide-react"
 
 export default function PatientDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [stats, setStats] = useState({
+  const [status, setStats] = useState({
     upcomingAppointments: 0,
     pendingBills: 0,
     activePrescriptions: 0,

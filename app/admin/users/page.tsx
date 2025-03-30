@@ -261,6 +261,24 @@ export default function AdminUsersPage() {
                     </td>
                   </tr>
                 ))}
+
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-6">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      className="px-4 py-2 mx-1 bg-gray-200 rounded disabled:opacity-50">
+                        Previous
+                      </button>
+                      <span className="px-4 py-2">{`Page ${currentPage} of ${totalPages}`}</span>
+                      <button
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        className="px-4 py-2 mx-1 bg-gray-200 rounded disabled:opacity-50">
+                          Next
+                        </button>
+                  </div>
+                )}
               </tbody>
             </table>
           </div>

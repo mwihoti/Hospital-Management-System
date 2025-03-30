@@ -246,7 +246,7 @@ export default function StaffDetailPage() {
                 <TabsContent value="appointments">
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">
-                      To view this doctor's appointments, please go to the Appointments section.
+                      To view this doctor&apos;s appointments, please go to the Appointments section.
                     </p>
                     <Button className="mt-4" onClick={() => router.push("/admin/appointments")}>
                       View Appointments

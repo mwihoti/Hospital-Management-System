@@ -96,7 +96,7 @@ export default function AdminDashboard() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-center space-x-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-gray-600">Welcome back, {session?.user?.name}. Here's what's happening in your hospital.</p>
+        <p className="text-gray-600">Welcome back, {session?.user?.name}. Here &apos;s what&apos;s happening in your hospital.</p>
         <button className="border p-4 rounded" onClick={handleLogout}>Signout</button>
       </div>
 

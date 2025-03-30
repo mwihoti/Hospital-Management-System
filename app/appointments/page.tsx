@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarIcon, Clock, ChevronLeft, ChevronRight, Plus, Search, Filter, Activity } from 'lucide-react';
 import { getAppointments, getCalendarDays, updateAppointmentStatus, type Appointment, type CalendarDay } from "@/lib/api";
@@ -59,6 +59,44 @@ export default function AppointmentsPage() {
     fetchCalendarDays();
   }, []);
 
+    // Apply search and department filters
+    const applyFilters = useCallback(
+      (data: Appointment[]) => {
+      let filtered = [...data];
+      
+      // Apply search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(
+          appointment => 
+            appointment.patient.toLowerCase().includes(query) ||
+            appointment.doctor.toLowerCase().includes(query) ||
+            appointment.id.toLowerCase().includes(query)
+        );
+      }
+      
+      // Apply department filter
+      if (departmentFilter !== "all-departments") {
+        filtered = filtered.filter(
+          appointment => appointment.department.toLowerCase() === departmentFilter.toLowerCase()
+        );
+      }
+      
+      // Apply day filter
+      if (selectedDay) {
+        filtered = filtered.filter(
+          appointment => {
+            // Extract day from date (assuming format YYYY-MM-DD)
+            const appointmentDay = appointment.date.split('-')[2];
+            return appointmentDay === selectedDay;
+          }
+        );
+      }
+      
+      setFilteredAppointments(filtered);
+    },
+  [searchQuery, departmentFilter, selectedDay]);
+  
   // Handle tab changes
   useEffect(() => {
     const fetchFilteredAppointments = async () => {
@@ -82,41 +120,7 @@ export default function AppointmentsPage() {
     fetchFilteredAppointments();
   }, [activeTab]);
 
-  // Apply search and department filters
-  const applyFilters = (data: Appointment[]) => {
-    let filtered = [...data];
-    
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        appointment => 
-          appointment.patient.toLowerCase().includes(query) ||
-          appointment.doctor.toLowerCase().includes(query) ||
-          appointment.id.toLowerCase().includes(query)
-      );
-    }
-    
-    // Apply department filter
-    if (departmentFilter !== "all-departments") {
-      filtered = filtered.filter(
-        appointment => appointment.department.toLowerCase() === departmentFilter.toLowerCase()
-      );
-    }
-    
-    // Apply day filter
-    if (selectedDay) {
-      filtered = filtered.filter(
-        appointment => {
-          // Extract day from date (assuming format YYYY-MM-DD)
-          const appointmentDay = appointment.date.split('-')[2];
-          return appointmentDay === selectedDay;
-        }
-      );
-    }
-    
-    setFilteredAppointments(filtered);
-  };
+
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

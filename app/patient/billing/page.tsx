@@ -76,7 +76,7 @@ export default function PatientBilling() {
         <div className="bg-white rounded-lg shadow p-6 text-center">
           <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Bills Found</h2>
-          <p className="text-gray-500">You don't have any bills at the moment.</p>
+          <p className="text-gray-500">You don&apos;t have any bills at the moment.</p>
         </div>
       ) : (
         <div className="grid gap-4">

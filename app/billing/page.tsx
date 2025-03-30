@@ -51,7 +51,9 @@ export default function BillingPage() {
             } finally {
                 setLoading(false)
             }
+            
         }
+        fetchBills()
 
         // Mock data
         setTimeout(() => {
@@ -196,7 +198,7 @@ export default function BillingPage() {
         return bills.filter((bill) => bill.status !== "Paid").reduce((total, bill) => total + bill.amount, 0)
     }
 
-    const getStatusColor = (ststus: Bill["status"]) => {
+    const getStatusColor = (status: Bill["status"]) => {
         switch (status) {
             case "Paid":
                 return "bg-green-100 text-green-800"

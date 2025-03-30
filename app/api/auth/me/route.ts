@@ -4,8 +4,9 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession({req, ...authOptions})
 
+    if (!req) return
     if (!session || !session.user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }

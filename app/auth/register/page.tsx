@@ -55,7 +55,7 @@ export default function Register() {
       setLoading(true)
 
       // Remove confirmPassword from data sent to API
-      const { confirmPassword, ...dataToSend } = formData
+      const { confirmPassword: _, ...dataToSend } = formData
       console.log("Data being sent to API:", dataToSend)
 
 

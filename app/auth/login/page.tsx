@@ -15,7 +15,6 @@ export default function LoginPage() {
 
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
   const { data: session } = useSession()
 
   // Redirect if already logged in
@@ -102,6 +101,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       setError("Failed to create test user")
+      console.log("error message", error)
     } finally {
       setLoading(false)
     }
@@ -173,7 +173,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <span className="text-sm text-gray-600">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/auth/register" className="text-blue-600 hover:underline">
               Register
             </Link>

@@ -45,6 +45,7 @@ export default function Prescriptions() {
         duration: "",
       })
     }
+    router.push("/doctor/dashboard")
   }
 
   return (

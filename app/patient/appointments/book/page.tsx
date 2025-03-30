@@ -40,6 +40,8 @@ export default function BookAppointment() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
+
+        if (!fetchingDoctors) return
         setFetchingDoctors(true)
         const response = await fetch("/api/users/role/doctor")
         if (!response.ok) {
@@ -51,6 +53,7 @@ export default function BookAppointment() {
         // Check if data is an array or if it has a users property
         const doctorsList = Array.isArray(data) ? data : data.users || []
         setDoctors(doctorsList)
+        setDoctor(doctorsList)
       } catch (error) {
         console.error("Error fetching doctors:", error)
         toast.error("Failed to load doctors. Please try again.")
